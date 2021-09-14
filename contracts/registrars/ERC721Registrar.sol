@@ -17,7 +17,7 @@ contract ERC721Registrar is IAssetRegistrar, IERC721Receiver {
     mapping(uint256 => Token) public tokenOf;
 
     constructor(address _registry) {
-        registry = _registry;
+        registry = IAssetRegistry(_registry);
     }
 
     function onERC721Received(address, address, uint256 _tokenId, bytes calldata)

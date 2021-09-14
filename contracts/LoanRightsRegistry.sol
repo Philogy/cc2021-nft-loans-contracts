@@ -23,6 +23,12 @@ contract LoanRightsRegistry is ERC721, ILoanRightsRegistry {
         emit Registered(primaryTokenId, _lender, _borrower);
     }
 
+    function deleteBorrower(uint256 _loanId) external override {
+        require(msg.sender == loanTracker, "LLR: Not LoanTracker");
+        uint256 borrowerTokenId = _loanId * 2 + 1;
+        _burn(borrowerTokenId);
+    }
+
     function isLenderOf(uint256 _loanId, address _lender)
         external override view returns (bool)
     {

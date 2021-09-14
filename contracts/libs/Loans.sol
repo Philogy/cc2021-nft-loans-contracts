@@ -58,11 +58,17 @@ library Loans {
     }
 
     function setDefaulted(Loan storage _loan) internal {
-        _loan.status = Status.Closed;
+        require(isOpen(_loan), "Loans: Not open");
+        _loan.status = Status.Defaulted;
     }
 
     function setClosed(Loan storage _loan) internal {
+        require(isOpen(_loan), "Loans: Not open");
         _loan.status = Status.Closed;
+    }
+
+    function isOpen(Loan storage _loan) internal view returns (bool) {
+        return _loan.status == Status.Open;
     }
 
     function isDefaulted(Loan storage _loan) internal view returns (bool) {

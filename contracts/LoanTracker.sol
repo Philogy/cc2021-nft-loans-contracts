@@ -43,7 +43,7 @@ contract LoanTracker {
         external
     {
         assetRegistry.claim(_assetId);
-        require(_eraDuration > 0, "LoanTracker: era duration 0");
+        require(_eraDuration > 0, "LoanTracker: Era duration 0");
         LoanAgreement storage agreement = loans[totalLoansIssued++];
         agreement.denomintation = _denomination;
         agreement.assetId = _assetId;
@@ -58,5 +58,18 @@ contract LoanTracker {
         loan.minPayment = _minPayment.toUint128();
 
         rightsRegistry.register(_lender, _borrower);
+    }
+
+    function defaultOn(uint256 _loanId) external {
+        _checkIsBorrowerOf(_loanId);
+        loans[_loanId].loan.setDefaulted();
+        rightsRegistry.deleteBorrower(_loanId);
+    }
+
+    function _checkIsBorrowerOf(uint256 _loanId) internal view {
+        require(
+            rightsRegistry.isBorrowerOf(_loanId, msg.sender),
+            "LoanTracker: Not borrower"
+        );
     }
 }
