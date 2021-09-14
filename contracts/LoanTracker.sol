@@ -3,12 +3,13 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./libs/PaymentsManager.sol";
+import "./libs/Loans.sol";
 import "./interfaces/IAssetRegistry.sol";
 import "./interfaces/ILoanRightsRegistry.sol";
-import "./libs/Loans.sol";
 
 
-contract LoanTracker {
+contract LoanTracker is PaymentsManager {
     using Loans for Loans.Loan;
     using SafeCast for *;
 
@@ -58,6 +59,16 @@ contract LoanTracker {
         loan.minPayment = _minPayment.toUint128();
 
         rightsRegistry.register(_lender, _borrower);
+    }
+
+    function payNextFor(uint256 _loanId, uint256 _amount) external {
+        LoanAgreement storage agreement = loans[_loanId];
+        _assignAvailableTo(
+            agreement.denomintation,
+            _amount,
+            rightsRegistry.lenderOf(_loanId)
+        );
+        agreement.loan.payNext(_amount);
     }
 
     function defaultOn(uint256 _loanId) external {

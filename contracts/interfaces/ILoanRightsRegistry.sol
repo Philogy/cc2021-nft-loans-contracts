@@ -11,6 +11,8 @@ interface ILoanRightsRegistry {
 
     function register(address _lender, address _borrower) external;
     function deleteBorrower(uint256 _loanId) external;
+    function lenderOf(uint256 _loanId) external view returns (address);
+    function borrowerOf(uint256 _loanId) external view returns (address);
     function isLenderOf(uint256 _loanId, address _lender)
         external view returns (bool);
     function isBorrowerOf(uint256 _loanId, address _borrower)

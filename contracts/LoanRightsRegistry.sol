@@ -29,6 +29,18 @@ contract LoanRightsRegistry is ERC721, ILoanRightsRegistry {
         _burn(borrowerTokenId);
     }
 
+    function lenderOf(uint256 _loanId)
+        external override view returns (address)
+    {
+        return ownerOf(_loanId * 2);
+    }
+
+    function borrowerOf(uint256 _loanId)
+        external override view returns (address)
+    {
+        return ownerOf(_loanId * 2 + 1);
+    }
+
     function isLenderOf(uint256 _loanId, address _lender)
         external override view returns (bool)
     {
