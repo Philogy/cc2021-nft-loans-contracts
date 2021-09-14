@@ -6,7 +6,7 @@ import "./interfaces/IAssetRegistrar.sol";
 
 contract AssetRegistry is IAssetRegistry {
     address public immutable loanTracker;
-    uint256 public totalAssets;
+    uint256 public override totalAssets;
     mapping(uint256 => address) public override assetRegistrarOf;
 
     constructor(address _loanTracker) {
@@ -14,7 +14,7 @@ contract AssetRegistry is IAssetRegistry {
     }
 
     function registerAsset() external override returns (uint256) {
-        uint256 newAssetId = totalAssets++;
+        uint256 newAssetId = ++totalAssets;
         assetRegistrarOf[newAssetId] = msg.sender;
         return newAssetId;
     }
@@ -23,8 +23,8 @@ contract AssetRegistry is IAssetRegistry {
         require(msg.sender == loanTracker, "AssetRegistry: not loan tracker");
         address registrar = assetRegistrarOf[_assetId];
         require(registrar != address(0), "AssetRegistry: invalid asset");
-        IAssetRegistrar(registrar).releaseTo(_assetId, _recipient);
         assetRegistrarOf[_assetId] = address(0);
+        IAssetRegistrar(registrar).releaseTo(_assetId, _recipient);
     }
 
     function isValidAsset(uint256 _assetId) public view override returns (bool) {
