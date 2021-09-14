@@ -14,6 +14,23 @@ contract PaymentsManager {
         _token.safeTransfer(_recipient, _getAvailable(_token));
     }
 
+    function releasePendingBalance(
+        IERC20 _token,
+        address _owner,
+        uint256 _amount
+    )
+        external
+    {
+        require(
+            msg.sender == _owner || _authPayment(_owner),
+            "Payments: Not authorized"
+        );
+        uint256 ownerBalance = pendingBalanceOf[_token][_owner];
+        require(ownerBalance >= _amount, "Payments: Insufficient balance");
+        storedBalanceOf[_token] -= _amount;
+        pendingBalanceOf[_token][_owner] = ownerBalance - _amount;
+    }
+
     function _assignAvailableTo(
         IERC20 _token,
         uint256 _amount,
@@ -31,5 +48,9 @@ contract PaymentsManager {
 
     function _getAvailable(IERC20 _token) internal view returns (uint256) {
         return _token.balanceOf(address(this)) - storedBalanceOf[_token];
+    }
+
+    function _authPayment(address) internal virtual returns (bool) {
+        return true;
     }
 }

@@ -83,4 +83,8 @@ contract LoanTracker is PaymentsManager {
             "LoanTracker: Not borrower"
         );
     }
+
+    function _authPayment(address _owner) internal override view returns (bool) {
+        return rightsRegistry.isApprovedForAll(_owner, msg.sender);
+    }
 }
