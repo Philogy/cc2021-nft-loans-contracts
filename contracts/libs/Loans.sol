@@ -8,7 +8,7 @@ library Loans {
     using InterestMaths for uint256;
     using SafeCast for *;
 
-    enum Status { Uninitialized, Open, Defaulted, Closed }
+    enum Status { Uninitialized, Open, Defaulted, PayedOff }
 
     struct Loan {
         Status status;
@@ -68,7 +68,7 @@ library Loans {
         checkIsOpen(_loan);
         uint256 outstanding = uint256(_loan.outstanding);
         require(outstanding == 0, "Loans: Loan not payed off");
-        _loan.status = Status.Closed;
+        _loan.status = Status.PayedOff;
     }
 
     function getCurrentEra(Loan storage _loan) internal view returns (uint256) {
@@ -85,5 +85,14 @@ library Loans {
 
     function checkIsOpen(Loan storage _loan) internal view {
         require(_loan.status == Status.Open, "Loans: Not open");
+    }
+
+    function isPayedOff(Loan storage _loan) internal view returns (bool) {
+        return _loan.status == Status.PayedOff;
+    }
+
+    function isComplete(Loan storage _loan) internal view returns (bool) {
+        Status status = _loan.status;
+        return status == Status.PayedOff || status == Status.Defaulted;
     }
 }

@@ -86,21 +86,33 @@ contract LoanTracker is PaymentsManager {
 
     function defaultOn(uint256 _loanId) external {
         _checkIsBorrowerOf(_loanId);
-        _triggerDefault(_loanId);
+        loans[_loanId].loan.setDefaulted();
+        rightsRegistry.deleteBorrower(_loanId);
     }
 
     function forceDefaultOn(uint256 _loanId) external {
         _checkIsLenderOf(_loanId);
         loans[_loanId].loan.tryDefault();
+        rightsRegistry.deleteBorrower(_loanId);
     }
 
     function close(uint256 _loanId) external {
         loans[_loanId].loan.tryClose();
     }
 
-    function _triggerDefault(uint256 _loanId) internal {
-        loans[_loanId].loan.setDefaulted();
-        rightsRegistry.deleteBorrower(_loanId);
+    function releaseCollateralTo(uint256 _loanId, address _recipient) external {
+        Loans.Loan storage loan = loans[_loanId].loan;
+        require(loan.isComplete(), "LoanTracker: Not yet complete");
+        if (loan.isPayedOff()) {
+            _checkIsBorrowerOf(_loanId);
+            rightsRegistry.deleteBorrower(_loanId);
+        } else {
+            _checkIsLenderOf(_loanId);
+        }
+        uint256 assetId = loans[_loanId].assetId;
+        delete loans[_loanId];
+        rightsRegistry.deleteLender(_loanId);
+        assetRegistry.releaseAssetTo(assetId, _recipient);
     }
 
     function _checkIsBorrowerOf(uint256 _loanId) internal view {

@@ -15,7 +15,7 @@ contract AssetRegistry is IAssetRegistry {
     }
 
     function registerAsset() external override returns (uint256) {
-        uint256 newAssetId = ++totalAssets;
+        uint256 newAssetId = totalAssets++;
         assetRegistrarOf[newAssetId] = msg.sender;
         return newAssetId;
     }
