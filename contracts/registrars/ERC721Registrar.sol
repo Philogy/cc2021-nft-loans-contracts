@@ -7,7 +7,7 @@ import "../interfaces/IAssetRegistrar.sol";
 import "../interfaces/IAssetRegistry.sol";
 
 contract ERC721Registrar is IAssetRegistrar, IERC721Receiver {
-    address internal immutable registry;
+    IAssetRegistry internal immutable registry;
 
     struct Token {
         IERC721 collection;
@@ -23,7 +23,7 @@ contract ERC721Registrar is IAssetRegistrar, IERC721Receiver {
     function onERC721Received(address, address, uint256 _tokenId, bytes calldata)
         external override returns (bytes4)
     {
-        uint256 assetId = IAssetRegistry(registry).registerAsset();
+        uint256 assetId = registry.registerAsset();
         tokenOf[assetId] = Token({
             collection: IERC721(msg.sender),
             id: _tokenId
@@ -32,9 +32,14 @@ contract ERC721Registrar is IAssetRegistrar, IERC721Receiver {
     }
 
     function releaseTo(uint256 _assetId, address _recipient) external override {
-        require(msg.sender == registry, "ERC721Registrar: not registry");
-        Token storage token = tokenOf[_assetId];
-        token.collection.safeTransferFrom(address(this), _recipient, token.id);
+        require(msg.sender == address(registry), "ERC721Registrar: not registry");
+        if (_recipient == address(0)) {
+            uint256 newAssetId = registry.registerAsset();
+            tokenOf[newAssetId] = tokenOf[_assetId];
+        } else {
+            Token storage token = tokenOf[_assetId];
+            token.collection.safeTransferFrom(address(this), _recipient, token.id);
+        }
         delete tokenOf[_assetId];
     }
 }
