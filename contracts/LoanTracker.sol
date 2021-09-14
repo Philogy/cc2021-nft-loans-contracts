@@ -91,13 +91,11 @@ contract LoanTracker is PaymentsManager {
 
     function forceDefaultOn(uint256 _loanId) external {
         _checkIsLenderOf(_loanId);
-        Loans.Loan storage loan = loans[_loanId].loan;
-        uint256 lastPayedEra = uint256(loan.lastPayedEra);
-        uint256 totalEras = uint256(loan.duration);
-        require(lastPayedEra < totalEras, "LoanTracker: Already payed off");
-        uint256 currentEra = loan.getCurrentEra();
-        require(lastPayedEra < currentEra, "LoanTracker: Not behind");
-        _triggerDefault(_loanId);
+        loans[_loanId].loan.tryDefault();
+    }
+
+    function close(uint256 _loanId) external {
+        loans[_loanId].loan.tryClose();
     }
 
     function _triggerDefault(uint256 _loanId) internal {

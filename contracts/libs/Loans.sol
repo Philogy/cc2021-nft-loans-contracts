@@ -8,7 +8,7 @@ library Loans {
     using InterestMaths for uint256;
     using SafeCast for *;
 
-    enum Status { Open, Defaulted, Closed }
+    enum Status { Uninitialized, Open, Defaulted, Closed }
 
     struct Loan {
         Status status;
@@ -50,6 +50,27 @@ library Loans {
         return uint256(_loan.minPayment);
     }
 
+    function tryDefault(Loan storage _loan) internal {
+        checkIsOpen(_loan);
+        uint256 outstanding = uint256(_loan.outstanding);
+        require(outstanding > 0, "Loans: Loan payed off");
+        uint256 currentEra = getCurrentEra(_loan);
+        uint256 totalEras = uint256(_loan.duration);
+        require(
+            currentEra >= totalEras ||
+            (_loan.minPayment > 0 && currentEra > uint256(_loan.lastPayedEra)),
+            "Loans: Nothing past due"
+        );
+        _loan.status = Status.Defaulted;
+    }
+
+    function tryClose(Loan storage _loan) internal {
+        checkIsOpen(_loan);
+        uint256 outstanding = uint256(_loan.outstanding);
+        require(outstanding == 0, "Loans: Loan not payed off");
+        _loan.status = Status.Closed;
+    }
+
     function getCurrentEra(Loan storage _loan) internal view returns (uint256) {
         uint256 eraDuration = uint256(_loan.eraDuration) * ERA_DURATION_PREC;
         uint256 startTime = uint256(_loan.startTime);
@@ -58,24 +79,11 @@ library Loans {
     }
 
     function setDefaulted(Loan storage _loan) internal {
-        require(isOpen(_loan), "Loans: Not open");
+        checkIsOpen(_loan);
         _loan.status = Status.Defaulted;
     }
 
-    function setClosed(Loan storage _loan) internal {
-        require(isOpen(_loan), "Loans: Not open");
-        _loan.status = Status.Closed;
-    }
-
-    function isOpen(Loan storage _loan) internal view returns (bool) {
-        return _loan.status == Status.Open;
-    }
-
-    function isDefaulted(Loan storage _loan) internal view returns (bool) {
-        return _loan.status == Status.Defaulted;
-    }
-
-    function isClose(Loan storage _loan) internal view returns (bool) {
-        return _loan.status == Status.Closed;
+    function checkIsOpen(Loan storage _loan) internal view {
+        require(_loan.status == Status.Open, "Loans: Not open");
     }
 }
