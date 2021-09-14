@@ -56,4 +56,20 @@ library Loans {
         if (block.timestamp < startTime) return 0;
         return (startTime - block.timestamp) / eraDuration;
     }
+
+    function setDefaulted(Loan storage _loan) internal {
+        _loan.status = Status.Closed;
+    }
+
+    function setClosed(Loan storage _loan) internal {
+        _loan.status = Status.Closed;
+    }
+
+    function isDefaulted(Loan storage _loan) internal view returns (bool) {
+        return _loan.status == Status.Defaulted;
+    }
+
+    function isClose(Loan storage _loan) internal view returns (bool) {
+        return _loan.status == Status.Closed;
+    }
 }
