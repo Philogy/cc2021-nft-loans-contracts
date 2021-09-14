@@ -2,27 +2,53 @@
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./interfaces/IAssetRegistry.sol";
+import "./interfaces/ILoanRightsRegistry.sol";
 import "./libs/Loans.sol";
+
 
 contract LoanTracker {
     using Loans for Loans.Loan;
     using SafeCast for *;
 
-    mapping(uint256 => Loans.Loan) public loans;
+    struct LoanAgreement {
+        Loans.Loan loan;
+        IERC20 denomintation;
+        uint256 assetId;
+    }
+
+    IAssetRegistry internal immutable assetRegistry;
+    ILoanRightsRegistry internal immutable rightsRegistry;
+    mapping(uint256 => LoanAgreement) public loans;
     uint256 public totalLoansIssued;
 
+    constructor(address _assetRegistry, address _rightsRegistry) {
+        assetRegistry = IAssetRegistry(_assetRegistry);
+        rightsRegistry = ILoanRightsRegistry(_rightsRegistry);
+    }
+
     function createLoan(
+        uint256 _assetId,
+        IERC20 _denomination,
         uint256 _duration,
         uint256 _eraDuration,
         uint256 _interestRate,
         uint256 _startTime,
         uint256 _principal,
-        uint256 _minPayment
+        uint256 _minPayment,
+        address _lender,
+        address _borrower
     )
         external
     {
+        assetRegistry.claim(_assetId);
         require(_eraDuration > 0, "LoanTracker: era duration 0");
-        Loans.Loan storage loan = loans[totalLoansIssued++];
+        LoanAgreement storage agreement = loans[totalLoansIssued++];
+        agreement.denomintation = _denomination;
+        agreement.assetId = _assetId;
+
+        Loans.Loan storage loan = agreement.loan;
         loan.status = Loans.Status.Open;
         loan.duration = _duration.toUint32();
         loan.eraDuration = _eraDuration.toUint16();
@@ -30,5 +56,7 @@ contract LoanTracker {
         loan.startTime = _startTime.toUint32();
         loan.outstanding = _principal.toUint128();
         loan.minPayment = _minPayment.toUint128();
+
+        rightsRegistry.register(_lender, _borrower);
     }
 }
