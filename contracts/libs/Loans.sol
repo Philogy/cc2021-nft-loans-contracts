@@ -54,7 +54,7 @@ library Loans {
         uint256 eraDuration = uint256(_loan.eraDuration) * ERA_DURATION_PREC;
         uint256 startTime = uint256(_loan.startTime);
         if (block.timestamp < startTime) return 0;
-        return (startTime - block.timestamp) / eraDuration;
+        return (block.timestamp - startTime) / eraDuration;
     }
 
     function setDefaulted(Loan storage _loan) internal {

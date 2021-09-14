@@ -86,6 +86,21 @@ contract LoanTracker is PaymentsManager {
 
     function defaultOn(uint256 _loanId) external {
         _checkIsBorrowerOf(_loanId);
+        _triggerDefault(_loanId);
+    }
+
+    function forceDefaultOn(uint256 _loanId) external {
+        _checkIsLenderOf(_loanId);
+        Loans.Loan storage loan = loans[_loanId].loan;
+        uint256 lastPayedEra = uint256(loan.lastPayedEra);
+        uint256 totalEras = uint256(loan.duration);
+        require(lastPayedEra < totalEras, "LoanTracker: Already payed off");
+        uint256 currentEra = loan.getCurrentEra();
+        require(lastPayedEra < currentEra, "LoanTracker: Not behind");
+        _triggerDefault(_loanId);
+    }
+
+    function _triggerDefault(uint256 _loanId) internal {
         loans[_loanId].loan.setDefaulted();
         rightsRegistry.deleteBorrower(_loanId);
     }
@@ -94,6 +109,13 @@ contract LoanTracker is PaymentsManager {
         require(
             rightsRegistry.isBorrowerOf(_loanId, msg.sender),
             "LoanTracker: Not borrower"
+        );
+    }
+
+    function _checkIsLenderOf(uint256 _loanId) internal view {
+        require(
+            rightsRegistry.isLenderOf(_loanId, msg.sender),
+            "LoanTracker: Not lender"
         );
     }
 
