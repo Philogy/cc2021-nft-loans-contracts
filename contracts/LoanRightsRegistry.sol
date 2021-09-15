@@ -15,22 +15,22 @@ contract LoanRightsRegistry is ERC721, ILoanRightsRegistry {
     function register(address _lender, address _borrower)
         external override
     {
-        require(msg.sender == loanTracker, "LLR: Not LoanTracker");
+        _checkOnlyLoanTracker();
         uint256 primaryTokenId = totalTokensIssued;
         _safeMint(_lender, primaryTokenId);
         _safeMint(_borrower, primaryTokenId + 1);
         totalTokensIssued = primaryTokenId + 2;
-        emit Registered(primaryTokenId, _lender, _borrower);
+        emit Registered(primaryTokenId / 2, _lender, _borrower);
     }
 
-    function deleteBorrower(uint256 _loanId) external override {
-        require(msg.sender == loanTracker, "LLR: Not LoanTracker");
+    function deleteBorrowerOf(uint256 _loanId) external override {
+        _checkOnlyLoanTracker();
         uint256 borrowerTokenId = _loanId * 2 + 1;
         _burn(borrowerTokenId);
     }
 
-    function deleteLender(uint256 _loanId) external override {
-        require(msg.sender == loanTracker, "LLR: Not LoanTracker");
+    function deleteLenderOf(uint256 _loanId) external override {
+        _checkOnlyLoanTracker();
         uint256 primaryTokenId = _loanId * 2;
         _burn(primaryTokenId);
     }
@@ -58,8 +58,10 @@ contract LoanRightsRegistry is ERC721, ILoanRightsRegistry {
         external override view returns (bool)
     {
         uint256 primaryTokenId = _loanId * 2;
-        unchecked {
-            return _isApprovedOrOwner(_borrower, primaryTokenId + 1);
-        }
+        return _isApprovedOrOwner(_borrower, primaryTokenId + 1);
+    }
+
+    function _checkOnlyLoanTracker() internal view {
+        require(msg.sender == loanTracker, "LLR: Not LoanTracker");
     }
 }

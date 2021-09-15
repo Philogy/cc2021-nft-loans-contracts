@@ -6,14 +6,14 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 interface ILoanRightsRegistry is IERC721 {
 
     event Registered(
-        uint256 indexed primaryTokenId,
+        uint256 indexed loanId,
         address indexed initialLender,
         address indexed initialBorrower
     );
 
     function register(address _lender, address _borrower) external;
-    function deleteBorrower(uint256 _loanId) external;
-    function deleteLender(uint256 _loanId) external;
+    function deleteBorrowerOf(uint256 _loanId) external;
+    function deleteLenderOf(uint256 _loanId) external;
     function lenderOf(uint256 _loanId) external view returns (address);
     function borrowerOf(uint256 _loanId) external view returns (address);
     function isLenderOf(uint256 _loanId, address _lender)
