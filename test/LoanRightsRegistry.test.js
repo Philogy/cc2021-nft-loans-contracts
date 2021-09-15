@@ -1,10 +1,6 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
-
-const addresses = (val) => {
-  if (val instanceof Array) return val.map((account) => account.address)
-  return val.address
-}
+const { addresses } = require('./utils.js')
 
 describe('LoanRightsRegistry', () => {
   let loanTracker
