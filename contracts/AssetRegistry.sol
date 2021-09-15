@@ -8,7 +8,7 @@ contract AssetRegistry is IAssetRegistry {
     address internal immutable loanTracker;
     uint256 public override totalAssets;
     mapping(uint256 => address) public override registrarOf;
-    mapping(uint256 => bool) public override claimed;
+    mapping(uint256 => bool) public override reserved;
 
     constructor(address _loanTracker) {
         loanTracker = _loanTracker;
@@ -22,18 +22,24 @@ contract AssetRegistry is IAssetRegistry {
     }
 
     function releaseAssetTo(uint256 _assetId, address _recipient) external override {
-        _checkAuth();
         address registrar = registrarOf[_assetId];
+        if (reserved[_assetId]) {
+            _checkAuth();
+            reserved[_assetId] = false;
+        } else {
+            require(registrarOf[_assetId] != address(0), "AssetRegistry: Invalid asset");
+        }
         registrarOf[_assetId] = address(0);
-        claimed[_assetId] = false;
         emit AssetRelease(registrar, _assetId, _recipient);
         IAssetRegistrar(registrar).releaseTo(_assetId, _recipient);
     }
 
-    function tryClaim(uint256 _assetId) external override {
+    function reserve(uint256 _assetId) external override {
         _checkAuth();
-        require(!claimed[_assetId], "AssetRegistry: Already claimed");
-        claimed[_assetId] = true;
+        require(registrarOf[_assetId] != address(0), "AssetRegistry: Invalid asset");
+        require(!reserved[_assetId], "AssetRegistry: Already reserved");
+        reserved[_assetId] = true;
+        emit Reserved(_assetId);
     }
 
     function _checkAuth() internal view {
