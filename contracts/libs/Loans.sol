@@ -57,7 +57,7 @@ library Loans {
         uint256 currentEra = getCurrentEra(_loan);
         uint256 totalEras = uint256(_loan.duration);
         require(
-            currentEra >= totalEras ||
+            (totalEras > 0 && currentEra >= totalEras) ||
             (_loan.minPayment > 0 && currentEra > uint256(_loan.lastPayedEra)),
             "Loans: Nothing past due"
         );
