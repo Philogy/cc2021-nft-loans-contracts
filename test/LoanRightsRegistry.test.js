@@ -50,24 +50,24 @@ describe('LoanRightsRegistry', () => {
     it('tracks rights token owners as lender / borrower', async () => {
       const [lender, borrower] = addresses(users)
       expect(await rightsRegistry.lenderOf(0)).to.equal(lender)
-      expect(await rightsRegistry.isLenderOf(0, lender)).to.be.true
+      expect(await rightsRegistry.isLenderOf(0, lender)).to.equal(true)
       expect(await rightsRegistry.borrowerOf(0)).to.equal(borrower)
-      expect(await rightsRegistry.isBorrowerOf(0, borrower)).to.be.true
+      expect(await rightsRegistry.isBorrowerOf(0, borrower)).to.equal(true)
 
       await rightsRegistry.connect(users[1])[SAFE_TRANSFER_FROM](borrower, users[2].address, 1)
       expect(await rightsRegistry.borrowerOf(0)).to.equal(users[2].address)
-      expect(await rightsRegistry.isBorrowerOf(0, users[2].address)).to.be.true
+      expect(await rightsRegistry.isBorrowerOf(0, users[2].address)).to.equal(true)
       await rightsRegistry.connect(users[2])[SAFE_TRANSFER_FROM](users[2].address, borrower, 1)
     })
     it('recognizes approved operators as lender / borrower', async () => {
       const [lender] = addresses(users)
-      expect(await rightsRegistry.isLenderOf(0, users[3].address)).to.be.false
+      expect(await rightsRegistry.isLenderOf(0, users[3].address)).to.equal(false)
       await rightsRegistry.connect(users[0]).setApprovalForAll(users[3].address, true)
-      expect(await rightsRegistry.isLenderOf(0, users[3].address)).to.be.true
+      expect(await rightsRegistry.isLenderOf(0, users[3].address)).to.equal(true)
 
       await rightsRegistry.connect(users[0])[SAFE_TRANSFER_FROM](lender, users[2].address, 0)
-      expect(await rightsRegistry.isLenderOf(0, lender)).to.be.false
-      expect(await rightsRegistry.isLenderOf(0, users[3].address)).to.be.false
+      expect(await rightsRegistry.isLenderOf(0, lender)).to.equal(false)
+      expect(await rightsRegistry.isLenderOf(0, users[3].address)).to.equal(false)
     })
     it('keeps track of loanId over multiple registrations', async () => {
       const [lender, borrower] = addresses(users)

@@ -7,7 +7,7 @@ import "./interfaces/IAssetRegistrar.sol";
 contract AssetRegistry is IAssetRegistry {
     address internal immutable loanTracker;
     uint256 public override totalAssets;
-    mapping(uint256 => address) public override assetRegistrarOf;
+    mapping(uint256 => address) public override registrarOf;
     mapping(uint256 => bool) public override claimed;
 
     constructor(address _loanTracker) {
@@ -16,24 +16,27 @@ contract AssetRegistry is IAssetRegistry {
 
     function registerAsset() external override returns (uint256) {
         uint256 newAssetId = totalAssets++;
-        assetRegistrarOf[newAssetId] = msg.sender;
-        emit Registered(msg.sender, newAssetId);
+        registrarOf[newAssetId] = msg.sender;
+        emit Registration(msg.sender, newAssetId);
         return newAssetId;
     }
 
     function releaseAssetTo(uint256 _assetId, address _recipient) external override {
-        require(msg.sender == loanTracker, "AssetRegistry: not loan tracker");
-        address registrar = assetRegistrarOf[_assetId];
-        require(registrar != address(0), "AssetRegistry: invalid asset");
-        assetRegistrarOf[_assetId] = address(0);
+        _checkAuth();
+        address registrar = registrarOf[_assetId];
+        registrarOf[_assetId] = address(0);
         claimed[_assetId] = false;
+        emit AssetRelease(registrar, _assetId, _recipient);
         IAssetRegistrar(registrar).releaseTo(_assetId, _recipient);
     }
 
     function tryClaim(uint256 _assetId) external override {
-        require(msg.sender == loanTracker, "AssetRegistry: not loan tracker");
-        require(assetRegistrarOf[_assetId] != address(0), "AssetRegistry: invalid asset");
-        require(!claimed[_assetId], "AssetRegistry: already claimed");
+        _checkAuth();
+        require(!claimed[_assetId], "AssetRegistry: Already claimed");
         claimed[_assetId] = true;
+    }
+
+    function _checkAuth() internal view {
+        require(msg.sender == loanTracker, "AssetRegistry: Not LoanTracker");
     }
 }
