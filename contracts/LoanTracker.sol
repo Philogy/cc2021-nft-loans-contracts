@@ -43,7 +43,7 @@ contract LoanTracker is PaymentsManager {
     )
         external
     {
-        assetRegistry.claim(_assetId);
+        assetRegistry.tryClaim(_assetId);
         require(_eraDuration > 0, "LoanTracker: Era duration 0");
         LoanAgreement storage agreement = loans[totalLoansIssued++];
         agreement.denomintation = _denomination;

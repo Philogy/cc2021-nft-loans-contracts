@@ -5,10 +5,10 @@ import "./interfaces/IAssetRegistry.sol";
 import "./interfaces/IAssetRegistrar.sol";
 
 contract AssetRegistry is IAssetRegistry {
-    address public immutable loanTracker;
+    address internal immutable loanTracker;
     uint256 public override totalAssets;
     mapping(uint256 => address) public override assetRegistrarOf;
-    mapping(uint256 => bool) public claimed;
+    mapping(uint256 => bool) public override claimed;
 
     constructor(address _loanTracker) {
         loanTracker = _loanTracker;
@@ -17,6 +17,7 @@ contract AssetRegistry is IAssetRegistry {
     function registerAsset() external override returns (uint256) {
         uint256 newAssetId = totalAssets++;
         assetRegistrarOf[newAssetId] = msg.sender;
+        emit Registered(msg.sender, newAssetId);
         return newAssetId;
     }
 
@@ -29,14 +30,10 @@ contract AssetRegistry is IAssetRegistry {
         IAssetRegistrar(registrar).releaseTo(_assetId, _recipient);
     }
 
-    function claim(uint256 _assetId) external override {
+    function tryClaim(uint256 _assetId) external override {
         require(msg.sender == loanTracker, "AssetRegistry: not loan tracker");
-        require(isValidAsset(_assetId), "AssetRegistry: invalid asset");
+        require(assetRegistrarOf[_assetId] != address(0), "AssetRegistry: invalid asset");
         require(!claimed[_assetId], "AssetRegistry: already claimed");
         claimed[_assetId] = true;
-    }
-
-    function isValidAsset(uint256 _assetId) public view override returns (bool) {
-        return assetRegistrarOf[_assetId] != address(0);
     }
 }
