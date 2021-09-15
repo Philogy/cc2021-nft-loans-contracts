@@ -4,16 +4,25 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "compile": "hardhat compile"
+    "test-optimized": "OPTIMIZE_COMPILE=true REPORT_GAS=true hardhat test",
+    "test-gas": "REPORT_GAS=true hardhat test",
+    "test": "hardhat test",
+    "compile": "hardhat compile",
+    "compile-optimized": "OPTIMIZE_COMPILE=true hardhat compile"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "chai": "^4.3.4",
     "eslint": "^7.32.0",
     "eslint-plugin-prettier": "^4.0.0",
-    "hardhat": "^2.6.4"
+    "ethereum-waffle": "^3.4.0",
+    "ethers": "^5.4.6",
+    "hardhat": "^2.6.4",
+    "hardhat-gas-reporter": "^1.0.4"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.3.1"
