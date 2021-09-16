@@ -17,7 +17,7 @@ contract AssetRegistry is IAssetRegistry {
     function registerAsset() external override returns (uint256) {
         uint256 newAssetId = totalAssets++;
         registrarOf[newAssetId] = msg.sender;
-        emit Registration(msg.sender, newAssetId);
+        emit Registration(newAssetId, msg.sender);
         return newAssetId;
     }
 
@@ -30,7 +30,7 @@ contract AssetRegistry is IAssetRegistry {
             require(registrarOf[_assetId] != address(0), "AssetRegistry: Invalid asset");
         }
         registrarOf[_assetId] = address(0);
-        emit AssetRelease(registrar, _assetId, _recipient);
+        emit AssetRelease(_assetId, registrar, _recipient);
         IAssetRegistrar(registrar).releaseTo(_assetId, _recipient);
     }
 

@@ -2,10 +2,10 @@
 pragma solidity ^0.8.7;
 
 interface IAssetRegistry {
-    event Registration(address indexed registrar, uint256 indexed assetId);
+    event Registration( uint256 indexed assetId, address indexed registrar);
     event AssetRelease(
-        address indexed registrar,
         uint256 indexed assetId,
+        address indexed registrar,
         address indexed recipient
     );
     event Reserved(uint256 indexed assetId);

@@ -3,4 +3,6 @@ const addresses = (val) => {
   return val.address
 }
 
-module.exports = { addresses }
+const SAFE_TRANSFER_FROM = 'safeTransferFrom(address,address,uint256)'
+
+module.exports = { addresses, SAFE_TRANSFER_FROM }

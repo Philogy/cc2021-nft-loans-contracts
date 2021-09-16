@@ -1,14 +1,12 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
-const { addresses } = require('./utils.js')
+const { addresses, SAFE_TRANSFER_FROM } = require('./utils')
 
 describe('LoanRightsRegistry', () => {
   let loanTracker
   let attacker
   let users
   let rightsRegistry
-
-  const SAFE_TRANSFER_FROM = 'safeTransferFrom(address,address,uint256)'
 
   before(async () => {
     const LoanRightsRegistry = await ethers.getContractFactory('LoanRightsRegistry')

@@ -1,6 +1,5 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
-const { addresses } = require('./utils.js')
 const { constants } = ethers
 
 describe('AssetRegistry', () => {
@@ -33,11 +32,11 @@ describe('AssetRegistry', () => {
     it('allows any address to register assets', async () => {
       await expect(assetRegistry.connect(users[0]).registerAsset())
         .to.emit(assetRegistry, 'Registration')
-        .withArgs(users[0].address, 0)
+        .withArgs(0, users[0].address)
       expect(await assetRegistry.registrarOf(0)).to.equal(users[0].address)
       await expect(assetRegistry.connect(users[1]).registerAsset())
         .to.emit(assetRegistry, 'Registration')
-        .withArgs(users[1].address, 1)
+        .withArgs(1, users[1].address)
       expect(await assetRegistry.registrarOf(1)).to.equal(users[1].address)
     })
     it('returns correct assetId upon registration', async () => {
@@ -60,7 +59,7 @@ describe('AssetRegistry', () => {
       const recipient = users[0].address
       await expect(assetRegistry.releaseAssetTo(assetId, recipient))
         .to.emit(assetRegistry, 'AssetRelease')
-        .withArgs(mockRegistrar.address, assetId, recipient)
+        .withArgs(assetId, mockRegistrar.address, recipient)
         .to.emit(mockRegistrar, 'ReleaseHook')
         .withArgs(assetId, recipient)
     })
@@ -75,7 +74,7 @@ describe('AssetRegistry', () => {
       const recipient = users[1].address
       await expect(assetRegistry.connect(users[1]).releaseAssetTo(assetId, recipient))
         .to.emit(assetRegistry, 'AssetRelease')
-        .withArgs(mockRegistrar.address, assetId, recipient)
+        .withArgs(assetId, mockRegistrar.address, recipient)
         .to.emit(mockRegistrar, 'ReleaseHook')
         .withArgs(assetId, recipient)
     })
