@@ -23,6 +23,25 @@ library Loans {
 
     uint256 constant internal ERA_DURATION_PREC = 12 hours;
 
+    function init(
+        Loan storage _loan,
+        uint32 _duration,
+        uint16 _eraDuration,
+        uint32 _interestRate,
+        uint32 _startTime,
+        uint128 _principal,
+        uint128 _minPayment
+    ) internal {
+        require(_eraDuration > 0, "Loans: Era duration 0");
+        _loan.status = Loans.Status.Open;
+        _loan.duration = _duration;
+        _loan.eraDuration = _eraDuration;
+        _loan.interestRate = _interestRate;
+        _loan.startTime = _startTime;
+        _loan.outstanding = _principal;
+        _loan.minPayment = _minPayment;
+    }
+
     function payDown(Loan storage _loan, uint256 _totalPayment, uint32 _eras)
         internal
     {
@@ -50,11 +69,11 @@ library Loans {
         return uint256(_loan.minPayment);
     }
 
-    function tryDefault(Loan storage _loan) internal {
+    function tryDefault(Loan storage _loan, uint256 _timestamp) internal {
         checkIsOpen(_loan);
         uint256 outstanding = uint256(_loan.outstanding);
         require(outstanding > 0, "Loans: Loan payed off");
-        uint256 currentEra = getCurrentEra(_loan);
+        uint256 currentEra = getCurrentEra(_loan, _timestamp);
         uint256 totalEras = uint256(_loan.duration);
         require(
             (totalEras > 0 && currentEra >= totalEras) ||
@@ -71,11 +90,13 @@ library Loans {
         _loan.status = Status.PayedOff;
     }
 
-    function getCurrentEra(Loan storage _loan) internal view returns (uint256) {
+    function getCurrentEra(Loan storage _loan, uint256 _timestamp)
+        internal view returns (uint256)
+    {
         uint256 eraDuration = uint256(_loan.eraDuration) * ERA_DURATION_PREC;
         uint256 startTime = uint256(_loan.startTime);
-        if (block.timestamp < startTime) return 0;
-        return (block.timestamp - startTime) / eraDuration;
+        if (_timestamp <= startTime) return 0;
+        return (_timestamp - startTime) / eraDuration;
     }
 
     function setDefaulted(Loan storage _loan) internal {

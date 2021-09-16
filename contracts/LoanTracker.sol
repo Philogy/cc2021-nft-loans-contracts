@@ -44,20 +44,17 @@ contract LoanTracker is PaymentsManager {
         external
     {
         assetRegistry.reserve(_assetId);
-        require(_eraDuration > 0, "LoanTracker: Era duration 0");
         LoanAgreement storage agreement = loans[totalLoansIssued++];
         agreement.denomintation = _denomination;
         agreement.assetId = _assetId;
-
-        Loans.Loan storage loan = agreement.loan;
-        loan.status = Loans.Status.Open;
-        loan.duration = _duration.toUint32();
-        loan.eraDuration = _eraDuration.toUint16();
-        loan.interestRate = _interestRate.toUint32();
-        loan.startTime = _startTime.toUint32();
-        loan.outstanding = _principal.toUint128();
-        loan.minPayment = _minPayment.toUint128();
-
+        agreement.loan.init(
+            _duration.toUint32(),
+            _eraDuration.toUint16(),
+            _interestRate.toUint32(),
+            _startTime.toUint32(),
+            _principal.toUint128(),
+            _minPayment.toUint128()
+        );
         rightsRegistry.register(_lender, _borrower);
     }
 
@@ -92,7 +89,7 @@ contract LoanTracker is PaymentsManager {
 
     function forceDefaultOn(uint256 _loanId) external {
         _checkIsLenderOf(_loanId);
-        loans[_loanId].loan.tryDefault();
+        loans[_loanId].loan.tryDefault(_getTimestamp());
         rightsRegistry.deleteBorrowerOf(_loanId);
     }
 
@@ -131,5 +128,9 @@ contract LoanTracker is PaymentsManager {
 
     function _authPayment(address _owner) internal override view returns (bool) {
         return rightsRegistry.isApprovedForAll(_owner, msg.sender);
+    }
+
+    function _getTimestamp() internal virtual view returns (uint256) {
+        return block.timestamp;
     }
 }
