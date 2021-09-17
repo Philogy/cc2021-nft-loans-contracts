@@ -3,8 +3,8 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./libs/PaymentsManager.sol";
-import "./libs/Loans.sol";
+import "./lib/PaymentsManager.sol";
+import "./lib/Loans.sol";
 import "./interfaces/IAssetRegistry.sol";
 import "./interfaces/ILoanRightsRegistry.sol";
 

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import "hardhat/console.sol";
 import "./InterestMaths.sol";
 
 library Loans {
@@ -21,7 +22,7 @@ library Loans {
         uint128 minPayment;
     }
 
-    uint256 constant internal ERA_DURATION_PREC = 12 hours;
+    uint256 constant internal ERA_UNIT_DURATION = 12 hours;
 
     function init(
         Loan storage _loan,
@@ -33,6 +34,7 @@ library Loans {
         uint128 _minPayment
     ) internal {
         require(_eraDuration > 0, "Loans: Era duration 0");
+        require(_principal > 0, "Loans: No principal");
         _loan.status = Loans.Status.Open;
         _loan.duration = _duration;
         _loan.eraDuration = _eraDuration;
@@ -45,9 +47,10 @@ library Loans {
     function payDown(Loan storage _loan, uint256 _totalPayment, uint32 _eras)
         internal
     {
+        checkIsOpen(_loan);
         uint256 minPayment = getMinPayment(_loan);
         uint256 minTotalPayment = _eras * minPayment;
-        require(minTotalPayment <= _totalPayment, "LoanTracker: payment below min");
+        require(minTotalPayment <= _totalPayment, "Loans: Total payment below min");
         uint256 interestRate = uint256(_loan.interestRate);
         uint256 outstanding = uint256(_loan.outstanding);
         uint256 firstPayment = _totalPayment - minTotalPayment + minPayment;
@@ -58,11 +61,19 @@ library Loans {
         _loan.outstanding = outstanding.toUint128();
     }
 
+    function payCurrent(Loan storage _loan, uint256 _payment) internal {
+        checkIsOpen(_loan);
+        require(_loan.lastPayedEra > 0, "Loans: No current era to pay off");
+        _loan.outstanding -= _payment.toUint128();
+    }
+
     function payNext(Loan storage _loan, uint256 _payment) internal {
-        require(getMinPayment(_loan) <= _payment, "LoanTracker: payment below min");
+        checkIsOpen(_loan);
+        require(getMinPayment(_loan) <= _payment, "Loans: Payment below min");
         uint256 interestRate = uint256(_loan.interestRate);
         uint256 outstanding = uint256(_loan.outstanding);
         _loan.outstanding = outstanding.accrue(interestRate, _payment).toUint128();
+        _loan.lastPayedEra++;
     }
 
     function getMinPayment(Loan storage _loan) internal view returns (uint256) {
@@ -93,7 +104,7 @@ library Loans {
     function getCurrentEra(Loan storage _loan, uint256 _timestamp)
         internal view returns (uint256)
     {
-        uint256 eraDuration = uint256(_loan.eraDuration) * ERA_DURATION_PREC;
+        uint256 eraDuration = uint256(_loan.eraDuration) * ERA_UNIT_DURATION;
         uint256 startTime = uint256(_loan.startTime);
         if (_timestamp <= startTime) return 0;
         return (_timestamp - startTime) / eraDuration;

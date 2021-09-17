@@ -34,20 +34,20 @@ library InterestMaths {
         uint256 _payment
     ) internal pure returns (uint256) {
         uint256 infPayment = fdiv(_payment, _interestRate);
-        uint256 totalInterest = exp(SCALE + _interestRate, _repetitions);
+        uint256 totalGrowth = exp(SCALE + _interestRate, _repetitions);
 
         if (infPayment > _outstanding) {
             uint256 diff = infPayment - _outstanding;
-            return infPayment - fmul(totalInterest, diff);
+            return infPayment - fmul(totalGrowth, diff);
         } else {
             uint256 diff = _outstanding - infPayment;
-            return infPayment + fmul(totalInterest, diff);
+            return infPayment + fmul(totalGrowth, diff);
         }
     }
 
     function exp(uint256 _fBase, uint256 _exp) internal pure returns (uint256) {
-        uint256 acc = _fBase * SCALE;
+        uint256 acc = SCALE;
         for (uint256 i; i < _exp; i++) acc = fmul(acc, _fBase);
-        return acc / SCALE;
+        return acc;
     }
 }
