@@ -22,7 +22,6 @@ interface ILoanTracker is IPaymentsManager {
     function payNext(uint256 _loanId, uint256 _amount) external;
     function defaultOn(uint256 _loanId) external;
     function forceDefaultOn(uint256 _loanId) external;
-    function close(uint256 _loanId) external;
     function releaseCollateralTo(uint256 _loanId, address _recipient)
         external returns (address releasedFor);
 }

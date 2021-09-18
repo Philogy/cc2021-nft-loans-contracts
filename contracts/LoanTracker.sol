@@ -107,14 +107,11 @@ contract LoanTracker is ILoanTracker, PaymentsManager {
         rightsRegistry.deleteBorrowerOf(_loanId);
     }
 
-    function close(uint256 _loanId) external override {
-        loans[_loanId].loan.tryClose();
-    }
-
     function releaseCollateralTo(uint256 _loanId, address _recipient)
         external override returns (address releasedFor)
     {
         Loans.Loan storage loan = loans[_loanId].loan;
+        loan.tryClose();
         require(loan.isComplete(), "LoanTracker: Not yet complete");
         if (loan.isPayedOff()) {
             _checkIsBorrowerOf(_loanId);

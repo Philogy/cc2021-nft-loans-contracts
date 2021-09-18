@@ -89,10 +89,6 @@ contract LoanManager is LoanManagerBorrowLend, UnsafeMulticall {
         loanTracker.forceDefaultOn(_loanId);
     }
 
-    function close(uint256 _loanId) external {
-        loanTracker.close(_loanId);
-    }
-
     function releaseCollateralTo(uint256 _loanId, address _recipient) external {
         address releasedFor = loanTracker.releaseCollateralTo(_loanId, _recipient);
         require(releasedFor == msg.sender, "LoanManager: Not releaser");
