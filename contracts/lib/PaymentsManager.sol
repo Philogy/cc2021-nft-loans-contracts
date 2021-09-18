@@ -21,10 +21,7 @@ contract PaymentsManager {
     )
         external
     {
-        require(
-            msg.sender == _owner || _authPayment(_owner),
-            "Payments: Not authorized"
-        );
+        require(_authPayment(_owner), "Payments: Not authorized");
         uint256 ownerBalance = pendingBalanceOf[_token][_owner];
         require(ownerBalance >= _amount, "Payments: Insufficient balance");
         storedBalanceOf[_token] -= _amount;
@@ -50,7 +47,7 @@ contract PaymentsManager {
         return _token.balanceOf(address(this)) - storedBalanceOf[_token];
     }
 
-    function _authPayment(address) internal virtual returns (bool) {
-        return true;
+    function _authPayment(address _owner) internal virtual returns (bool) {
+        return msg.sender == _owner;
     }
 }

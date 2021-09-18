@@ -7,9 +7,10 @@ import "./lib/PaymentsManager.sol";
 import "./lib/Loans.sol";
 import "./interfaces/IAssetRegistry.sol";
 import "./interfaces/ILoanRightsRegistry.sol";
+import "./interfaces/ILoanTracker.sol";
 
 
-contract LoanTracker is PaymentsManager {
+contract LoanTracker is ILoanTracker, PaymentsManager {
     using Loans for Loans.Loan;
     using SafeCast for *;
 
@@ -41,7 +42,7 @@ contract LoanTracker is PaymentsManager {
         address _lender,
         address _borrower
     )
-        external
+        external override
     {
         assetRegistry.reserve(_assetId);
         LoanAgreement storage agreement = loans[totalLoansIssued++];
@@ -59,7 +60,7 @@ contract LoanTracker is PaymentsManager {
     }
 
     function payDown(uint256 _loanId, uint256 _totalAmount, uint256 _eras)
-        external
+        external override
     {
         uint32 eras = _eras.toUint32();
         LoanAgreement storage agreement = loans[_loanId];
@@ -71,7 +72,7 @@ contract LoanTracker is PaymentsManager {
         agreement.loan.payDown(_totalAmount, eras);
     }
 
-    function payCurrent(uint256 _loanId, uint256 _amount) external {
+    function payCurrent(uint256 _loanId, uint256 _amount) external override {
         LoanAgreement storage agreement = loans[_loanId];
         _assignAvailableTo(
             agreement.denomintation,
@@ -81,7 +82,7 @@ contract LoanTracker is PaymentsManager {
         agreement.loan.payCurrent(_amount);
     }
 
-    function payNext(uint256 _loanId, uint256 _amount) external {
+    function payNext(uint256 _loanId, uint256 _amount) external override {
         LoanAgreement storage agreement = loans[_loanId];
         _assignAvailableTo(
             agreement.denomintation,
@@ -91,23 +92,25 @@ contract LoanTracker is PaymentsManager {
         agreement.loan.payNext(_amount);
     }
 
-    function defaultOn(uint256 _loanId) external {
+    function defaultOn(uint256 _loanId) external override {
         _checkIsBorrowerOf(_loanId);
         loans[_loanId].loan.setDefaulted();
         rightsRegistry.deleteBorrowerOf(_loanId);
     }
 
-    function forceDefaultOn(uint256 _loanId) external {
+    function forceDefaultOn(uint256 _loanId) external override {
         _checkIsLenderOf(_loanId);
         loans[_loanId].loan.tryDefault(_getTimestamp());
         rightsRegistry.deleteBorrowerOf(_loanId);
     }
 
-    function close(uint256 _loanId) external {
+    function close(uint256 _loanId) external override {
         loans[_loanId].loan.tryClose();
     }
 
-    function releaseCollateralTo(uint256 _loanId, address _recipient) external {
+    function releaseCollateralTo(uint256 _loanId, address _recipient)
+        external override
+    {
         Loans.Loan storage loan = loans[_loanId].loan;
         require(loan.isComplete(), "LoanTracker: Not yet complete");
         if (loan.isPayedOff()) {
@@ -137,7 +140,8 @@ contract LoanTracker is PaymentsManager {
     }
 
     function _authPayment(address _owner) internal override view returns (bool) {
-        return rightsRegistry.isApprovedForAll(_owner, msg.sender);
+        return _owner == msg.sender
+            || rightsRegistry.isApprovedForAll(_owner, msg.sender);
     }
 
     function _getTimestamp() internal virtual view returns (uint256) {
