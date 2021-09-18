@@ -112,28 +112,22 @@ contract LoanTracker is ILoanTracker, PaymentsManager {
     }
 
     function releaseCollateralTo(uint256 _loanId, address _recipient)
-        external override
+        external override returns (address releasedFor)
     {
         Loans.Loan storage loan = loans[_loanId].loan;
         require(loan.isComplete(), "LoanTracker: Not yet complete");
         if (loan.isPayedOff()) {
             _checkIsBorrowerOf(_loanId);
+            releasedFor = rightsRegistry.borrowerOf(_loanId);
             rightsRegistry.deleteBorrowerOf(_loanId);
         } else {
+            releasedFor = rightsRegistry.lenderOf(_loanId);
             _checkIsLenderOf(_loanId);
         }
         uint256 assetId = loans[_loanId].assetId;
         delete loans[_loanId];
         rightsRegistry.deleteLenderOf(_loanId);
         assetRegistry.releaseAssetTo(assetId, _recipient);
-    }
-
-    function isComplete(uint256 _loanId) external override view returns (bool) {
-        return loans[_loanId].loan.isComplete();
-    }
-
-    function isPayedOff(uint256 _loanId) external override view returns (bool) {
-        return loans[_loanId].loan.isPayedOff();
     }
 
     function _checkIsBorrowerOf(uint256 _loanId) internal view {

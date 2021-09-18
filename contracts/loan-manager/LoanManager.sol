@@ -34,6 +34,11 @@ contract LoanManager is LoanManagerBorrowLend, UnsafeMulticall {
         _;
     }
 
+    modifier onlyLenderOf(uint256 _loanId) {
+        _checkIsLenderOf(_loanId);
+        _;
+    }
+
     function depositNative() external payable {
         weth.deposit{ value: msg.value }();
         weth.safeTransfer(address(loanTracker), msg.value);
@@ -76,7 +81,28 @@ contract LoanManager is LoanManagerBorrowLend, UnsafeMulticall {
         loanTracker.payCurrent(_loanId, _amount);
     }
 
-    function _checkIsBorrowerOf(uint256 _loanId) internal {
+    function defaultOn(uint256 _loanId) external onlyBorrowerOf(_loanId) {
+        loanTracker.defaultOn(_loanId);
+    }
+
+    function forceDefaultOn(uint256 _loanId) external onlyLenderOf(_loanId) {
+        loanTracker.forceDefaultOn(_loanId);
+    }
+
+    function close(uint256 _loanId) external {
+        loanTracker.close(_loanId);
+    }
+
+    function releaseCollateralTo(uint256 _loanId, address _recipient) external {
+        address releasedFor = loanTracker.releaseCollateralTo(_loanId, _recipient);
+        require(releasedFor == msg.sender, "LoanManager: Not releaser");
+    }
+
+    function _checkIsBorrowerOf(uint256 _loanId) internal view {
         require(rightsRegistry.lenderOf(_loanId) == msg.sender, "LoanManager: Not borrower");
+    }
+
+    function _checkIsLenderOf(uint256 _loanId) internal view {
+        require(rightsRegistry.lenderOf(_loanId) == msg.sender, "LoanManager: Not lender");
     }
 }
