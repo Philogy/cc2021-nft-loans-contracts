@@ -62,6 +62,7 @@ contract LoanTracker is ILoanTracker, PaymentsManager {
     function payDown(uint256 _loanId, uint256 _totalAmount, uint256 _eras)
         external override
     {
+        _checkIsBorrowerOf(_loanId);
         uint32 eras = _eras.toUint32();
         LoanAgreement storage agreement = loans[_loanId];
         _assignAvailableTo(
@@ -73,6 +74,7 @@ contract LoanTracker is ILoanTracker, PaymentsManager {
     }
 
     function payCurrent(uint256 _loanId, uint256 _amount) external override {
+        _checkIsBorrowerOf(_loanId);
         LoanAgreement storage agreement = loans[_loanId];
         _assignAvailableTo(
             agreement.denomintation,
@@ -83,6 +85,7 @@ contract LoanTracker is ILoanTracker, PaymentsManager {
     }
 
     function payNext(uint256 _loanId, uint256 _amount) external override {
+        _checkIsBorrowerOf(_loanId);
         LoanAgreement storage agreement = loans[_loanId];
         _assignAvailableTo(
             agreement.denomintation,
@@ -123,6 +126,14 @@ contract LoanTracker is ILoanTracker, PaymentsManager {
         delete loans[_loanId];
         rightsRegistry.deleteLenderOf(_loanId);
         assetRegistry.releaseAssetTo(assetId, _recipient);
+    }
+
+    function isComplete(uint256 _loanId) external override view returns (bool) {
+        return loans[_loanId].loan.isComplete();
+    }
+
+    function isPayedOff(uint256 _loanId) external override view returns (bool) {
+        return loans[_loanId].loan.isPayedOff();
     }
 
     function _checkIsBorrowerOf(uint256 _loanId) internal view {
