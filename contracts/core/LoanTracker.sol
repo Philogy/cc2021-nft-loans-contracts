@@ -3,11 +3,11 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./lib/PaymentsManager.sol";
-import "./lib/Loans.sol";
-import "./interfaces/IAssetRegistry.sol";
-import "./interfaces/ILoanRightsRegistry.sol";
-import "./interfaces/ILoanTracker.sol";
+import "../lib/PaymentsManager.sol";
+import "../lib/Loans.sol";
+import "../interfaces/IAssetRegistry.sol";
+import "../interfaces/ILoanRightsRegistry.sol";
+import "../interfaces/ILoanTracker.sol";
 
 
 contract LoanTracker is ILoanTracker, PaymentsManager {

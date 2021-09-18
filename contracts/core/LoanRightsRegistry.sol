@@ -2,7 +2,7 @@
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "./interfaces/ILoanRightsRegistry.sol";
+import "../interfaces/ILoanRightsRegistry.sol";
 
 contract LoanRightsRegistry is ERC721, ILoanRightsRegistry {
     address internal immutable loanTracker;

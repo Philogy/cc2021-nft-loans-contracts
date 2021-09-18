@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity ^0.8.7;
 
-import "./interfaces/IAssetRegistry.sol";
-import "./interfaces/IAssetRegistrar.sol";
+import "../interfaces/IAssetRegistry.sol";
+import "../interfaces/IAssetRegistrar.sol";
 
 contract AssetRegistry is IAssetRegistry {
     address internal immutable loanTracker;
