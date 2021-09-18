@@ -3,14 +3,15 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "../interfaces/IPaymentsManager.sol";
 
-contract PaymentsManager {
+contract PaymentsManager is IPaymentsManager {
     using SafeERC20 for IERC20;
 
     mapping(IERC20 => uint256) internal storedBalanceOf;
     mapping(IERC20 => mapping(address => uint256)) internal pendingBalanceOf;
 
-    function skimTo(IERC20 _token, address _recipient) public {
+    function skimAllTo(IERC20 _token, address _recipient) external override {
         _token.safeTransfer(_recipient, _getAvailable(_token));
     }
 
@@ -18,9 +19,7 @@ contract PaymentsManager {
         IERC20 _token,
         address _owner,
         uint256 _amount
-    )
-        external
-    {
+    ) external override {
         require(_authPayment(_owner), "Payments: Not authorized");
         uint256 ownerBalance = pendingBalanceOf[_token][_owner];
         require(ownerBalance >= _amount, "Payments: Insufficient balance");

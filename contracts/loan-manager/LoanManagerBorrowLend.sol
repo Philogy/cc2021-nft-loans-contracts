@@ -7,21 +7,14 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "../interfaces/IWeth.sol";
-import "../interfaces/ILoanTracker.sol";
-import "../interfaces/ILoanRightsRegistry.sol";
-import "../interfaces/IAssetRegistry.sol";
+import "./LoanManagerCore.sol";
 
-
-contract LoanManager {
+contract LoanManagerBorrowLend is LoanManagerCore {
     using SafeERC20 for IERC20;
     using SafeERC20 for IWeth;
     using ECDSA for bytes32;
     using Address for address payable;
 
-    ILoanTracker internal immutable loanTracker;
-    ILoanRightsRegistry internal immutable rightsRegistry;
-    IAssetRegistry internal immutable assetRegistry;
-    address internal immutable nftRegistrar;
     IWeth internal immutable weth;
 
     bytes32 internal DS_BORROW_NATIVE;
@@ -34,11 +27,14 @@ contract LoanManager {
         address _assetRegistry,
         address _nftRegistrar,
         address _weth
-    ) {
-        loanTracker = ILoanTracker(_loanTracker);
-        rightsRegistry = ILoanRightsRegistry(_rightsRegistry);
-        assetRegistry = IAssetRegistry(_assetRegistry);
-        nftRegistrar = _nftRegistrar;
+    )
+        LoanManagerCore(
+            _loanTracker,
+            _rightsRegistry,
+            _assetRegistry,
+            _nftRegistrar
+        )
+    {
         weth = IWeth(_weth);
 
         bytes32 LOCAL_DS = keccak256(abi.encode(
@@ -63,6 +59,8 @@ contract LoanManager {
             0x9bedf64cceca3a0a5d89d6f6c84e1d6081f45162656fb2f5b09df3334dcf25e9
         ));
     }
+
+    receive() external payable {}
 
     function lendNative(
         IERC721 _collection,
@@ -112,8 +110,13 @@ contract LoanManager {
         address _borrower,
         uint256 _expiry,
         bytes memory _borrowerSignature
-    ) external {
+    ) external payable {
         require(_expiry > block.timestamp, "LoanManager: Signature expired");
+        require(
+            msg.value == 0 ||
+            (_loanToken == weth && msg.value <= _loanTotal),
+            "LoanManager: Not wrapped native"
+       );
         bytes32 messageHash = keccak256(abi.encode(
             DS_BORROW_ERC20,
             _collection,
@@ -125,7 +128,16 @@ contract LoanManager {
             _expiry
         ));
         _verifySig(messageHash, _borrowerSignature, _borrower);
-        _loanToken.safeTransferFrom(msg.sender, _borrower, _loanTotal);
+        if (msg.value > 0) {
+            uint256 tokenRemainder = _loanTotal - msg.value;
+            weth.deposit{ value: msg.value }();
+            weth.safeTransfer(_borrower, msg.value);
+            if (tokenRemainder > 0) {
+                _loanToken.safeTransferFrom(msg.sender, _borrower, tokenRemainder);
+            }
+        } else {
+            _loanToken.safeTransferFrom(msg.sender, _borrower, _loanTotal);
+        }
         _initNftLoan(
             _collection,
             _tokenId,
