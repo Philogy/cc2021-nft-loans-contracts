@@ -71,6 +71,16 @@ contract LoanTracker is PaymentsManager {
         agreement.loan.payDown(_totalAmount, eras);
     }
 
+    function payCurrent(uint256 _loanId, uint256 _amount) external {
+        LoanAgreement storage agreement = loans[_loanId];
+        _assignAvailableTo(
+            agreement.denomintation,
+            _amount,
+            rightsRegistry.lenderOf(_loanId)
+        );
+        agreement.loan.payCurrent(_amount);
+    }
+
     function payNext(uint256 _loanId, uint256 _amount) external {
         LoanAgreement storage agreement = loans[_loanId];
         _assignAvailableTo(
