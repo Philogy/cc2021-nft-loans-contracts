@@ -32,4 +32,6 @@ const addresses = (val) => {
 
 const SAFE_TRANSFER_FROM = 'safeTransferFrom(address,address,uint256)'
 
-module.exports = { time, addresses, SAFE_TRANSFER_FROM }
+const toEther = (n) => ethers.utils.parseUnits(n.toString(), 'ether')
+
+module.exports = { time, addresses, SAFE_TRANSFER_FROM, toEther }

@@ -1,13 +1,11 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
-const { time: timeUtils } = require('../utils')
+const { time: timeUtils, toEther } = require('../utils')
 const {
   constants: { Loan },
   InterestMaths
 } = require('../../src/utils.js')
 const { toPerc } = InterestMaths
-
-const toEther = (n) => ethers.utils.parseUnits(n.toString(), 'ether')
 
 describe('Loans', () => {
   let loans

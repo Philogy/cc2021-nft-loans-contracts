@@ -5,14 +5,21 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/IPaymentsManager.sol";
 
-contract PaymentsManager is IPaymentsManager {
+abstract contract PaymentsManager is IPaymentsManager {
     using SafeERC20 for IERC20;
 
-    mapping(IERC20 => uint256) internal storedBalanceOf;
-    mapping(IERC20 => mapping(address => uint256)) internal pendingBalanceOf;
+    mapping(IERC20 => uint256) public override storedBalanceOf;
+    mapping(IERC20 => mapping(address => uint256)) public override pendingBalanceOf;
 
     function skimAllTo(IERC20 _token, address _recipient) external override {
         _token.safeTransfer(_recipient, _getAvailable(_token));
+    }
+
+    function skimTo(IERC20 _token, uint256 _amount, address _recipient)
+        external override
+    {
+        require(_amount <= _getAvailable(_token), "Payments: Insufficient excess");
+        _token.safeTransfer(_recipient, _amount);
     }
 
     function releasePendingBalance(
@@ -34,11 +41,7 @@ contract PaymentsManager is IPaymentsManager {
     )
         internal
     {
-        uint256 storedBal = storedBalanceOf[_token];
-        uint256 realBalance = _token.balanceOf(address(this));
-        uint256 usedBalance = storedBal + _amount;
-        require(realBalance >= usedBalance, "Payments: Insufficient balance");
-        storedBalanceOf[_token] = usedBalance;
+        _setStoredBalance(_token, storedBalanceOf[_token] + _amount);
         pendingBalanceOf[_token][_recipient] += _amount;
     }
 
@@ -48,5 +51,11 @@ contract PaymentsManager is IPaymentsManager {
 
     function _authPayment(address _owner) internal virtual returns (bool) {
         return msg.sender == _owner;
+    }
+
+    function _setStoredBalance(IERC20 _token, uint256 _balance) internal {
+        uint256 realBalance = _token.balanceOf(address(this));
+        require(realBalance >= _balance, "Payments: Insufficient balance");
+        storedBalanceOf[_token] = _balance;
     }
 }
