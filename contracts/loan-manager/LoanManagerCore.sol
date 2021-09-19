@@ -24,7 +24,7 @@ abstract contract LoanManagerCore is UnsafeMulticall {
         nftRegistrar = _nftRegistrar;
     }
 
-    function _storedNative() internal override pure returns (uint256) {
-        return 0;
+    function _checkValue(uint256 _msgValue) internal view {
+        require(_msgValue <= address(this).balance, "LMCore: Insufficient msg.value");
     }
 }

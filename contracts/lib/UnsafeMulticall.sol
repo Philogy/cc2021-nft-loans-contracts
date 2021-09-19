@@ -1,16 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity ^0.8.7;
 
-import "@openzeppelin/contracts/utils/Address.sol";
-
 /// @notice copy of Uniswap's Multicall (github.com/Uniswap/v3-periphery/blob/main/contracts/base/Multicall.sol)
 abstract contract UnsafeMulticall {
-    using Address for address payable;
-
-    function skimNativeTo(address payable _recipient) external {
-        _recipient.sendValue(_safeMsgValue());
-    }
-
     function multicall(bytes[] calldata data)
         external payable returns (bytes[] memory results)
     {
@@ -28,14 +20,4 @@ abstract contract UnsafeMulticall {
             results[i] = result;
         }
     }
-
-    function _checkValue(uint256 _msgValue) internal view {
-        require(_msgValue <= _safeMsgValue(), "UMC: Insufficient msg.value");
-    }
-
-    function _safeMsgValue() internal view returns (uint256) {
-        return address(this).balance - _storedNative();
-    }
-
-    function _storedNative() internal virtual view returns (uint256);
 }
