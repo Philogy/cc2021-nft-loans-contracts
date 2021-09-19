@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "../interfaces/IWeth.sol";
 import "./LoanManagerCore.sol";
 
-contract LoanManagerBorrowLend is LoanManagerCore {
+abstract contract LoanManagerBorrowLend is LoanManagerCore {
     using SafeERC20 for IERC20;
     using SafeERC20 for IWeth;
     using ECDSA for bytes32;
@@ -70,10 +70,12 @@ contract LoanManagerBorrowLend is LoanManagerCore {
         uint256[6] memory _loanParams,
         address _borrower,
         uint256 _expiry,
-        bytes memory _borrowerSignature
+        bytes memory _borrowerSignature,
+        uint256 _msgValue
     ) external payable {
         require(_expiry > block.timestamp, "LoanManager: Signature expired");
-        require(msg.value <= _loanTotal, "LoanManager: Payment overload");
+        _checkValue(_msgValue);
+        require(_msgValue <= _loanTotal, "LoanManager: Payment overload");
         bytes32 messageHash = keccak256(abi.encode(
             DS_BORROW_NATIVE,
             _collection,
@@ -84,7 +86,7 @@ contract LoanManagerBorrowLend is LoanManagerCore {
             _expiry
         ));
         _verifySig(messageHash, _borrowerSignature, _borrower);
-        uint256 tokenRemainder = _loanTotal - msg.value;
+        uint256 tokenRemainder = _loanTotal - _msgValue;
         if (tokenRemainder > 0) {
             weth.safeTransferFrom(msg.sender, address(this), tokenRemainder);
             weth.withdraw(tokenRemainder);
@@ -109,12 +111,14 @@ contract LoanManagerBorrowLend is LoanManagerCore {
         uint256[6] memory _loanParams,
         address _borrower,
         uint256 _expiry,
-        bytes memory _borrowerSignature
+        bytes memory _borrowerSignature,
+        uint256 _msgValue
     ) external payable {
         require(_expiry > block.timestamp, "LoanManager: Signature expired");
+        _checkValue(_msgValue);
         require(
-            msg.value == 0 ||
-            (_loanToken == weth && msg.value <= _loanTotal),
+            _msgValue == 0 ||
+            (_loanToken == weth && _msgValue <= _loanTotal),
             "LoanManager: Not wrapped native"
        );
         bytes32 messageHash = keccak256(abi.encode(
@@ -128,10 +132,10 @@ contract LoanManagerBorrowLend is LoanManagerCore {
             _expiry
         ));
         _verifySig(messageHash, _borrowerSignature, _borrower);
-        if (msg.value > 0) {
-            uint256 tokenRemainder = _loanTotal - msg.value;
-            weth.deposit{ value: msg.value }();
-            weth.safeTransfer(_borrower, msg.value);
+        if (_msgValue > 0) {
+            uint256 tokenRemainder = _loanTotal - _msgValue;
+            weth.deposit{ value: _msgValue }();
+            weth.safeTransfer(_borrower, _msgValue);
             if (tokenRemainder > 0) {
                 _loanToken.safeTransferFrom(msg.sender, _borrower, tokenRemainder);
             }
@@ -158,7 +162,7 @@ contract LoanManagerBorrowLend is LoanManagerCore {
         address _lender,
         uint256 _expiry,
         bytes memory _lenderSignature
-    ) external {
+    ) external payable {
         require(_expiry > block.timestamp, "LoanManager: Signature expired");
         bool receiveNative = address(_loanToken) == address(0);
         if (receiveNative) _loanToken = weth;
