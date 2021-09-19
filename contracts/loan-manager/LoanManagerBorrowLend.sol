@@ -194,6 +194,16 @@ abstract contract LoanManagerBorrowLend is LoanManagerCore {
         );
     }
 
+    function getDomainSeparators() external view returns (
+        bytes32 BORROW_NATIVE,
+        bytes32 BORROW_ERC20,
+        bytes32 LEND_ERC20
+    ) {
+        BORROW_NATIVE = DS_BORROW_NATIVE;
+        BORROW_ERC20 = DS_BORROW_ERC20;
+        LEND_ERC20 = LEND_ERC20;
+    }
+
     function _initNftLoan(
         IERC721 _collection,
         uint256 _tokenId,
