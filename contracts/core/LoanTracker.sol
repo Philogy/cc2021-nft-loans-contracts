@@ -143,7 +143,7 @@ contract LoanTracker is ILoanTracker, PaymentsManager {
 
     function _authPayment(address _owner) internal override view returns (bool) {
         return _owner == msg.sender
-            || rightsRegistry.isApprovedForAll(_owner, msg.sender);
+            || rightsRegistry.isManagerOf(_owner, msg.sender);
     }
 
     function _getTimestamp() internal virtual view returns (uint256) {

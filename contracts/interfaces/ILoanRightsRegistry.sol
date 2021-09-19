@@ -10,11 +10,19 @@ interface ILoanRightsRegistry is IERC721 {
         address indexed initialLender,
         address indexed initialBorrower
     );
+    event ManagerApproval(
+        address indexed owner,
+        address indexed operator,
+        bool approved
+    );
 
     function register(address _lender, address _borrower) external;
     function deleteBorrowerOf(uint256 _loanId) external;
     function deleteLenderOf(uint256 _loanId) external;
     function lenderOf(uint256 _loanId) external view returns (address);
+    function setManagerApproval(address _operator, bool _approved) external;
+    function isManagerOf(address _owner, address _operator)
+        external view returns (bool);
     function borrowerOf(uint256 _loanId) external view returns (address);
     function isLenderOf(uint256 _loanId, address _lender)
         external view returns (bool);

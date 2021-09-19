@@ -7,6 +7,7 @@ import "../interfaces/ILoanRightsRegistry.sol";
 contract LoanRightsRegistry is ERC721, ILoanRightsRegistry {
     address internal immutable loanTracker;
     uint256 public totalTokensIssued;
+    mapping(address => mapping(address => bool)) public override isManagerOf;
 
     constructor(address _loanTracker) ERC721("Loan Rights Registry", "LRR") {
         loanTracker = _loanTracker;
@@ -35,6 +36,14 @@ contract LoanRightsRegistry is ERC721, ILoanRightsRegistry {
         _burn(primaryTokenId);
     }
 
+    function setManagerApproval(address _operator, bool _approved)
+        external override
+    {
+        isManagerOf[msg.sender][_operator] = _approved;
+        emit ManagerApproval(msg.sender, _operator, _approved);
+        setApprovalForAll(_operator, _approved);
+    }
+
     function lenderOf(uint256 _loanId)
         external override view returns (address)
     {
@@ -51,14 +60,21 @@ contract LoanRightsRegistry is ERC721, ILoanRightsRegistry {
         external override view returns (bool)
     {
         uint256 primaryTokenId = _loanId * 2;
-        return _isApprovedOrOwner(_lender, primaryTokenId);
+        return _isManagerOrOwner(_lender, primaryTokenId);
     }
 
     function isBorrowerOf(uint256 _loanId, address _borrower)
         external override view returns (bool)
     {
         uint256 primaryTokenId = _loanId * 2;
-        return _isApprovedOrOwner(_borrower, primaryTokenId + 1);
+        return _isManagerOrOwner(_borrower, primaryTokenId + 1);
+    }
+
+    function _isManagerOrOwner(address _operator, uint256 _tokenId)
+        internal view returns (bool)
+    {
+        address owner = ownerOf(_tokenId);
+        return owner == _operator || isManagerOf[owner][_operator];
     }
 
     function _checkOnlyLoanTracker() internal view {
