@@ -47,6 +47,7 @@ library Loans {
     function payDown(Loan storage _loan, uint256 _totalPayment, uint32 _eras)
         internal
     {
+        require(_eras >= 1, "Loans: Must paydown at least 1");
         checkIsOpen(_loan);
         uint256 minPayment = getMinPayment(_loan);
         uint256 minTotalPayment = _eras * minPayment;
