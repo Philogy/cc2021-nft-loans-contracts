@@ -57,10 +57,10 @@ describe('LoanRightsRegistry', () => {
       expect(await rightsRegistry.isBorrowerOf(0, users[2].address)).to.equal(true)
       await rightsRegistry.connect(users[2])[SAFE_TRANSFER_FROM](users[2].address, borrower, 1)
     })
-    it('recognizes approved operators as lender / borrower', async () => {
+    it('recognizes set managers as lender / borrower', async () => {
       const [lender] = addresses(users)
       expect(await rightsRegistry.isLenderOf(0, users[3].address)).to.equal(false)
-      await rightsRegistry.connect(users[0]).setApprovalForAll(users[3].address, true)
+      await rightsRegistry.connect(users[0]).setIsManager(users[3].address, true)
       expect(await rightsRegistry.isLenderOf(0, users[3].address)).to.equal(true)
 
       await rightsRegistry.connect(users[0])[SAFE_TRANSFER_FROM](lender, users[2].address, 0)

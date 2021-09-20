@@ -36,12 +36,16 @@ contract LoanRightsRegistry is ERC721, ILoanRightsRegistry {
         _burn(primaryTokenId);
     }
 
-    function setManagerApproval(address _operator, bool _approved)
-        external override
+    function setDualApproval(address _operator, bool _approved) external override {
+        setIsManager(_operator, _approved);
+        setApprovalForAll(_operator, _approved);
+    }
+
+    function setIsManager(address _operator, bool _approved)
+        public override
     {
         isManagerOf[msg.sender][_operator] = _approved;
         emit ManagerApproval(msg.sender, _operator, _approved);
-        setApprovalForAll(_operator, _approved);
     }
 
     function lenderOf(uint256 _loanId)
