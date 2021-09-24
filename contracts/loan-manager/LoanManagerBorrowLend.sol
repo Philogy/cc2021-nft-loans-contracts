@@ -21,6 +21,8 @@ abstract contract LoanManagerBorrowLend is LoanManagerCore {
     bytes32 internal DS_BORROW_ERC20;
     bytes32 internal DS_LEND_ERC20;
 
+    mapping(address => mapping(bytes32 => bool)) public markedUnusable;
+
     constructor(
         address _loanTracker,
         address _rightsRegistry,
@@ -62,6 +64,10 @@ abstract contract LoanManagerBorrowLend is LoanManagerCore {
 
     receive() external payable {}
 
+    function markeUnusable(bytes32 _messageHash) external {
+        markedUnusable[msg.sender][_messageHash] = true;
+    }
+
     function lendNative(
         IERC721 _collection,
         uint256 _tokenId,
@@ -85,6 +91,7 @@ abstract contract LoanManagerBorrowLend is LoanManagerCore {
             _loanParams,
             _expiry
         ));
+        require(!markedUnusable[_borrower][messageHash], "LoanManager: Unusable");
         _verifySig(messageHash, _borrowerSignature, _borrower);
         uint256 tokenRemainder = _loanTotal - _msgValue;
         if (tokenRemainder > 0) {
@@ -131,6 +138,7 @@ abstract contract LoanManagerBorrowLend is LoanManagerCore {
             _loanParams,
             _expiry
         ));
+        require(!markedUnusable[_borrower][messageHash], "LoanManager: Unusable");
         _verifySig(messageHash, _borrowerSignature, _borrower);
         if (_msgValue > 0) {
             uint256 tokenRemainder = _loanTotal - _msgValue;
@@ -176,6 +184,7 @@ abstract contract LoanManagerBorrowLend is LoanManagerCore {
             _loanParams,
             _expiry
         ));
+        require(!markedUnusable[_lender][messageHash], "LoanManager: Unusable");
         _verifySig(messageHash, _lenderSignature, _lender);
         if (receiveNative) {
             weth.safeTransferFrom(_lender, address(this), _loanTotal);

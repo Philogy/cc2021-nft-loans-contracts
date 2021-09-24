@@ -1,6 +1,6 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
-const { addresses, SAFE_TRANSFER_FROM } = require('./utils')
+const { addresses, SAFE_TRANSFER_FROM } = require('../utils')
 
 describe('LoanRightsRegistry', () => {
   let loanTracker
