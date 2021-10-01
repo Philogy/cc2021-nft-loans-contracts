@@ -8,7 +8,6 @@ async function main() {
   const Weth = await ethers.getContractFactory('Weth')
   const ERC721Registrar = await ethers.getContractFactory('ERC721Registrar')
   const LoanManager = await ethers.getContractFactory('LoanManager')
-  const ERC721 = await ethers.getContractFactory('MockERC721')
 
   const nextNonce = await ethers.provider.getTransactionCount(deployer.address)
   const loanTrackerAddr = ethers.utils.getContractAddress({
@@ -27,7 +26,6 @@ async function main() {
     nftRegistrar.address,
     weth.address
   )
-  const nft = await ERC721.deploy()
 
   console.log(`AssetRegistry deployed at ${assetRegistry.address}`)
   console.log(`RightsRegistry deployed at ${rightsRegistry.address}`)
@@ -35,7 +33,16 @@ async function main() {
   console.log(`Weth deployed at ${weth.address}`)
   console.log(`ERC721Registrar deployed at ${nftRegistrar.address}`)
   console.log(`LoanManager deployed at ${loanManager.address}`)
-  console.log(`MockERC721 deployed at ${nft.address}`)
+  console.log('')
+  const localAddresses = {
+    assetRegistry: assetRegistry.address,
+    rightsRegistry: rightsRegistry.address,
+    loanTracker: loanTracker.address,
+    weth: weth.address,
+    nftRegistrar: nftRegistrar.address,
+    loanManager: loanManager.address
+  }
+  console.log('localAddresses: ', localAddresses)
 }
 
 main()

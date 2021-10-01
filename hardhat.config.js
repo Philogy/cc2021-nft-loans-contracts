@@ -7,6 +7,10 @@ module.exports = {
     local: {
       url: 'HTTP://127.0.0.1:8545',
       accounts: [process.env.PRIV_KEY_ACCOUNT0]
+    },
+    harmony: {
+      url: 'https://api.harmony.one',
+      accounts: [process.env.PRIV_KEY_ACCOUNT0]
     }
   },
   solidity: {
